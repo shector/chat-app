@@ -54,6 +54,19 @@ int main(int argc, char** argv) {
 
     int bytes_sent = send(client, msg.c_str(), strlen(msg.c_str()), 0);
     std::cout << bytes_sent << " bytes sent to server" << std::endl;
-   
+
+    /* This is left for posterity it can be unblocked as an example of the client waiting for a 
+     * a response but wait would block client and make firing off rapid requests with requests.sh
+     * more synchronous. Just left as an example.
+     */
+    
+    // std::unique_ptr<int[]> buffer(new int[INTERNAL_BUFFER_LENGTH]);
+    // int bytes_read;
+    // if (ReportError(((bytes_read = recv(client, buffer.get(), INTERNAL_BUFFER_LENGTH, 0)) == -1), 
+    //     "Receive response from server failed")) {
+    //     return EXIT_FAILURE;
+    // }
+
+    // std::cout << "Message received: " << std::string((char*)buffer.get(), bytes_read) << std::endl;
     return 0;
 }

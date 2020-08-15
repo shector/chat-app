@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 extern const int INTERNAL_BUFFER_LENGTH;
+// TODO: add some sort of performance testing to find best number of workers for my machine.
 const int THREAD_POOL_WORKER_COUNT = 100; // do not block on multiple requests
 std::shared_timed_mutex mutex;
 
@@ -86,6 +87,7 @@ int main(int argc, char** argv) {
     std::vector<std::unique_ptr<int[]>> thread_buffers = CreateThreadBuffers(THREAD_POOL_WORKER_COUNT);
     
     srand(time(NULL)); // set random seed. 
+    std::string response = "Got your message thanks!";
     while (true) { 
         // Main thread acts as listener to accept new connections from clients.
         int client;
@@ -95,7 +97,7 @@ int main(int argc, char** argv) {
         }
 
         // For now just handle the request in a new thread by printing it. 
-        thread_pool.push([client, &thread_buffers] (int thread_id) {
+        thread_pool.push([client, &response, &thread_buffers] (int thread_id) {
             // random sleep to simulate doing work and show async behavior.
             usleep(RandomNumber(1,7) * 1000000); 
 
@@ -104,7 +106,7 @@ int main(int argc, char** argv) {
             mutex.unlock_shared();
 
 
-            int bytes_read;
+            int bytes_read = 0;
             // buffer length is shared by client and server so buffer will not overflow but be cut off instead. 
             if ((bytes_read = recv(client, local_buffer, INTERNAL_BUFFER_LENGTH, 0)) > 0) {
                 std::cout << "Message received: " << std::string((char*)local_buffer, bytes_read) << std::endl;
@@ -112,6 +114,10 @@ int main(int argc, char** argv) {
                 std::cout << "Socket FD: " << client << std::endl;
             }
             ReportError(bytes_read == -1, "read fail");
+
+            // Can send response if client is waiting for one. See client_example.cc. 
+            // send(client, response.c_str(), strlen(response.c_str()), 0);
+            // std::cout << "Sent Response" << std::endl;
             close(client);
             memset(local_buffer, 0, INTERNAL_BUFFER_LENGTH); // flush for reuse.
 
